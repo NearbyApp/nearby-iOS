@@ -8,14 +8,25 @@
 
 import Foundation
 
-class Spotted
+struct Spotted
 {
-    var id:Int?
-    var userId:Int?
-    var anonymity:Bool?
-    var date = Date()
-    var longitude:Double?
-    var latitude:Double?
-    var message:String?
-    var pictureURL:String?
+    let id: String
+    let userId: Int
+    let anonymity: Bool
+    let latitude: Double
+    let longitude: Double
+    let type: String
+    let creationDate: String
+    let message: String
+    
+    init(id: String, userId: Int, anonymity: Bool, latitude: Double, longitude: Double, type: String, creationDate: String, message: String) {
+        self.id = id
+        self.userId = userId
+        self.anonymity = anonymity
+        self.latitude = latitude
+        self.longitude = longitude
+        self.type = type
+        self.creationDate = creationDate
+        self.message = message
+    }
 }

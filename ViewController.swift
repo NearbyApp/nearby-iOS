@@ -18,6 +18,7 @@ class ViewController: UIViewController
     @IBOutlet var facebookConnect: UIButton!
     @IBOutlet var googleConnect: UIButton!
     
+    // Override methods
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -27,9 +28,12 @@ class ViewController: UIViewController
         logoContainer.backgroundColor = UIColor(red: 229/255, green: 57/255, blue: 53/255, alpha: 1)
         facebookConnect.backgroundColor = UIColor(red: 58/255, green: 87/255, blue: 155/255, alpha: 1)
         googleConnect.backgroundColor = UIColor(red: 220/255, green: 74/255, blue: 56/255, alpha: 1)
-        
-        if let accessToken = AccessToken.current {
-            // Verify login info and then redirect to landingView
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if AccessToken.current != nil {
+            self.goToLandingPage()
         }
     }
     
@@ -43,15 +47,17 @@ class ViewController: UIViewController
     }
     
     @objc fileprivate func facebookSignIn() {
+        
         let loginManager = LoginManager()
+        
         loginManager.logIn([ .publicProfile, .email ], viewController: self) { loginResult in
             switch loginResult {
             case .failed(let error):
                 self.alert(message: "FACEBOOK LOGIN FAILED: \(error)", title: "FAIL")
             case .cancelled:
                 self.alert(message: "User cancelled login.", title: "CANCELLED")
-            case .success(let grantedPermissions, let declinedPermissions, let accessToken):
-                self.goToLandingPage()
+            case .success( _, _, let accessToken):
+                self.authenticateUserByFacebook(accessToken: accessToken)
             }
         }
     }
@@ -59,7 +65,7 @@ class ViewController: UIViewController
     // Functions
     func goToLandingPage() {
         let storyBoard : UIStoryboard = UIStoryboard(name: "Main", bundle:nil)
-        let resultViewController = storyBoard.instantiateViewController(withIdentifier: "LandingViewController") as! LandingViewController
+        let resultViewController = storyBoard.instantiateViewController(withIdentifier: "LandingViewController")
         self.present(resultViewController, animated:true, completion:nil)
     }
     
@@ -68,6 +74,15 @@ class ViewController: UIViewController
         let OKAction = UIAlertAction(title: "OK", style: .default, handler: nil)
         alertController.addAction(OKAction)
         self.present(alertController, animated: true, completion: nil)
+    }
+    
+    func authenticateUserByFacebook(accessToken: AccessToken) {
+        let apiService = API()
+        if (apiService.facebookAuthenticate(token: accessToken.authenticationToken, id: accessToken.userId!)) {
+            self.goToLandingPage()
+        } else {
+            self.alert(message: "Something went wrong...")
+        }
     }
 }
 

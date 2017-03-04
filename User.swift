@@ -8,10 +8,10 @@
 
 import Foundation
 
-class User
+struct User
 {
-    var id:Int?
-    var email:String?
-    var facebookId:String?
-    var googlePlusId:String?
+    let id: Int
+    let email: String
+    let facebookId: String
+    let googlePlusId: String
 }

@@ -8,8 +8,8 @@
 
 import Foundation
 
-class Contact
+struct Contact
 {
-    var message:String?
-    var email:String?
+    let message: String
+    let email: String
 }

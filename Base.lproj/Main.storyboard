@@ -93,7 +93,7 @@
         <!--Landing View Controller-->
         <scene sceneID="2sl-BO-XxA">
             <objects>
-                <viewController storyboardIdentifier="LandingViewController" id="u7I-cs-VfS" customClass="LandingViewController" customModule="nearbyapp" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="LandingViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="u7I-cs-VfS" customClass="LandingViewController" customModule="nearbyapp" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Zzk-Zq-fC3"/>
                         <viewControllerLayoutGuide type="bottom" id="uCb-rd-9pB"/>
@@ -107,22 +107,16 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" red="1" green="0.1235636369" blue="0.11789516210000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </view>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="acs-H5-O9t">
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="acs-H5-O9t" customClass="MapContainer">
                                 <rect key="frame" x="0.0" y="59" width="375" height="608"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="y9Q-GH-JO0">
-                                        <rect key="frame" x="322" y="8" width="45" height="45"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    </button>
-                                </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <connections>
-                        <outlet property="mapContainer" destination="acs-H5-O9t" id="sij-cD-hzs"/>
+                        <outlet property="MapContainer" destination="acs-H5-O9t" id="3Gj-H1-RKf"/>
                         <outlet property="topHeaderContainer" destination="sIz-MX-xAK" id="JhU-g8-TXz"/>
                     </connections>
                 </viewController>
