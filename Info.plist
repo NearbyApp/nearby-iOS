@@ -27,11 +27,11 @@
 	<string>Main</string>
 	<key>FacebookAppID</key>
 	<string>730316910463943</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowArbitraryLoads</key>
-		<true/>
-	</dict>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowArbitraryLoads</key>
+        <true/>
+    </dict>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleExecutable</key>

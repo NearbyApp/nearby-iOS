@@ -11,22 +11,18 @@ import Foundation
 struct Spotted
 {
     let id: String
-    let userId: Int
-    let anonymity: Bool
-    let latitude: Double
-    let longitude: Double
-    let type: String
+    let fullName: String
+    let pictureURL: String
     let creationDate: String
+    let profilePictureURL: String
     let message: String
     
-    init(id: String, userId: Int, anonymity: Bool, latitude: Double, longitude: Double, type: String, creationDate: String, message: String) {
+    init(id: String, fullName: String, pictureURL: String, profilePictureURL: String, creationDate: String, message: String) {
         self.id = id
-        self.userId = userId
-        self.anonymity = anonymity
-        self.latitude = latitude
-        self.longitude = longitude
-        self.type = type
+        self.fullName = fullName
+        self.pictureURL = pictureURL
         self.creationDate = creationDate
+        self.profilePictureURL = profilePictureURL
         self.message = message
     }
 }

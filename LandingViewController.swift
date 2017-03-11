@@ -22,7 +22,7 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
     private var spottedView: SpottedView!
     
     let screenSize = UIScreen.main.bounds
-    let buttonBack = UIButton(type: UIButtonType.infoLight) as UIButton
+    var buttonBack = UIButton(type: UIButtonType.infoLight) as UIButton
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,7 +35,7 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
             self.locationManager.startUpdatingLocation()
         }
         
-        topHeaderContainer.frame = CGRect(x:0, y:20, width: screenSize.width, height: 50)
+        topHeaderContainer.frame = CGRect(x: 0, y: 20, width: screenSize.width, height: 50)
         topHeaderContainer.backgroundColor = UIColor(red: 229/255, green: 57/255, blue: 53/255, alpha: 1)
         
         self.displayGoogleMaps()
@@ -51,16 +51,10 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         
         // Adding center on map button
         self.mapView.addSubview(self.createButton(imgName: "ic_qu_direction_mylocation.png", cgrect: CGRect(x: screenSize.width-40, y: 10, width:30, height:30), backgroundColor: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.centerMapAction(_:))))
-        
-        // Adding + button
-        self.mapView.addSubview(self.createButton(imgName: "zoom.png", cgrect: CGRect(x: screenSize.width-40, y: 60, width:30, height:30), backgroundColor: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.zoomInAction(_:))))
-        
-        // Adding - button
-        self.mapView.addSubview(self.createButton(imgName: "minus.png", cgrect: CGRect(x: screenSize.width-40, y: 100, width:30, height:30), backgroundColor: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.zoomOutAction(_:))))
-    }
+        }
     
     func fetchMarkersInArea(minLat: Float, maxLat: Float, minLong: Float, maxLong: Float) {
-        let arrayMarkers = API().fetchMarkersInArea(minLat: minLat, maxLat: maxLat, minLong: minLong, maxLong: maxLong)
+        let arrayMarkers = API().fetchMarkersInArea(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, minLat: minLat, maxLat: maxLat, minLong: minLong, maxLong: maxLong)
         
         // Displaying Markers on the map
         for markerModel in arrayMarkers {
@@ -85,15 +79,11 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         
         // Creates the view to display spotted information
         self.spottedView = SpottedView(frame: CGRect.zero)
-        self.spottedView.fetchSpotted(spottedId: marker.title!)
+        self.spottedView.fetchSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, spottedId: marker.title!)
         self.mapView.addSubview(self.spottedView)
         
         // Creates the back button to return to the map when clicked
-        let imageBack = UIImage(named: "back.png") as UIImage?
-        self.buttonBack.frame = CGRect(x: 5, y: 5, width: 30, height: 30)
-        self.buttonBack.backgroundColor = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1)
-        self.buttonBack.setImage(imageBack, for: .normal)
-        self.buttonBack.addTarget(self, action: #selector(LandingViewController.backToMap(_:)), for:.touchUpInside)
+        self.buttonBack = self.createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:)))
         self.topHeaderContainer.addSubview(self.buttonBack)
         
         return self.spottedView
@@ -119,16 +109,6 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         self.mapView.animate(to: GMSCameraPosition.camera(withLatitude: (self.locationManager.location?.coordinate.latitude)!, longitude:(self.locationManager.location?.coordinate.longitude)!, zoom:self.zoom))
     }
     
-    @IBAction func zoomInAction(_ sender: Any) {
-        self.zoom = self.zoom + 1.0
-        self.mapView.animate(to: GMSCameraPosition.camera(withLatitude: self.mapView.camera.target.latitude, longitude: self.mapView.camera.target.longitude, zoom:self.zoom))
-    }
-    
-    @IBAction func zoomOutAction(_ sender: Any) {
-        self.zoom = self.zoom - 1.0
-        self.mapView.animate(to: GMSCameraPosition.camera(withLatitude: self.mapView.camera.target.latitude, longitude: self.mapView.camera.target.longitude, zoom:self.zoom))
-    }
-    
     @IBAction func backToMap(_ sender: Any) {
         self.buttonBack.removeFromSuperview()
         self.spottedView.removeFromSuperview()
@@ -143,5 +123,16 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         button.addTarget(self, action: selector, for:.touchUpInside)
         
         return button
+    }
+    
+    // Function that creates a LabelButton
+    private func createLabelButton(text: String, cgrect: CGRect, color: UIColor, selector:Selector) -> UIButton {
+        let label = UIButton(type: UIButtonType.custom) as UIButton
+        label.frame = cgrect
+        label.tintColor = color
+        label.setTitle(text, for: .normal)
+        label.addTarget(self, action: selector, for:.touchUpInside)
+        
+        return label
     }
 }
