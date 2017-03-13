@@ -130,6 +130,27 @@ class API
         return image!
     }
     
+    public func publishSpotted(token accessToken:String, id facebookId:String, anonymity: Bool, longitude: Float, latitude: Float, message: String) -> Bool {
+        self.accessToken = accessToken
+        self.facebookId = facebookId
+        
+        var request = self.buildRequest(url: "/v1/spotted", requestParams: "", method: "POST")
+        print(String(anonymity) + " " + String(longitude) + " " + String(latitude) + " " + String(message))
+        let getMethodData = "anonymity=" + String(anonymity) + "&longitude=" + String(longitude) + "&latitude=" + String(latitude) + "&message=" + message
+        request.httpBody = getMethodData.data(using: .utf8)
+        let session = URLSession.shared
+        
+        let newSpottedTask = session.dataTask(with: request) { (data, response, error) in
+            print(response)
+            if (response as? HTTPURLResponse) != nil {
+
+            }
+
+        }
+        newSpottedTask.resume()
+        return true
+    }
+    
     private func buildRequest(url: String, requestParams: String, method: String) -> URLRequest {
         let loginString = String(format: "%@:%@", self.facebookId, self.accessToken)
         let loginData = loginString.data(using: String.Encoding.utf8)!

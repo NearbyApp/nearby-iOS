@@ -8,7 +8,6 @@
 
 import Foundation
 import UIKit
-import PureLayout
 
 class SpottedView: UIView {
     var shouldSetupConstraints = true

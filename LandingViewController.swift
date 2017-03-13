@@ -20,9 +20,9 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
     private var locationManager = CLLocationManager()
     private var zoom:Float = 12.0
     private var spottedView: SpottedView!
+    private var newSpottedView: NewSpottedView!
     
     let screenSize = UIScreen.main.bounds
-    var buttonBack = UIButton(type: UIButtonType.infoLight) as UIButton
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,8 +35,10 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
             self.locationManager.startUpdatingLocation()
         }
         
-        topHeaderContainer.frame = CGRect(x: 0, y: 20, width: screenSize.width, height: 50)
-        topHeaderContainer.backgroundColor = UIColor(red: 229/255, green: 57/255, blue: 53/255, alpha: 1)
+        self.topHeaderContainer.frame = CGRect(x: 0, y: 20, width: screenSize.width, height: 50)
+        self.topHeaderContainer.backgroundColor = UIColor(red: 229/255, green: 57/255, blue: 53/255, alpha: 1)
+        
+        self.topHeaderContainer.addSubview(self.createLabelButton(text: "+", cgrect: CGRect(x: screenSize.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
         
         self.displayGoogleMaps()
     }
@@ -82,9 +84,10 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         self.spottedView.fetchSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, spottedId: marker.title!)
         self.mapView.addSubview(self.spottedView)
         
+        self.topHeaderContainer.subviews.forEach({ $0.removeFromSuperview() })
+        
         // Creates the back button to return to the map when clicked
-        self.buttonBack = self.createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:)))
-        self.topHeaderContainer.addSubview(self.buttonBack)
+        self.topHeaderContainer.addSubview(self.createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:))))
         
         return self.spottedView
     }
@@ -105,13 +108,41 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
     }
     
     // Actions
+    @IBAction func sendSpotted(_ sender: Any) {
+        self.newSpottedView.removeFromSuperview()
+        self.topHeaderContainer.subviews.forEach({ $0.removeFromSuperview() })
+        self.topHeaderContainer.addSubview(self.createLabelButton(text: "+", cgrect: CGRect(x: screenSize.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
+        
+        let message = self.newSpottedView.getSpottedMessage()
+        
+        let result = API().publishSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, anonymity: true, longitude: Float((self.locationManager.location?.coordinate.longitude)!), latitude: Float((self.locationManager.location?.coordinate.latitude)!), message: message)
+    }
+    
     @IBAction func centerMapAction(_ sender: Any) {
         self.mapView.animate(to: GMSCameraPosition.camera(withLatitude: (self.locationManager.location?.coordinate.latitude)!, longitude:(self.locationManager.location?.coordinate.longitude)!, zoom:self.zoom))
     }
     
     @IBAction func backToMap(_ sender: Any) {
-        self.buttonBack.removeFromSuperview()
-        self.spottedView.removeFromSuperview()
+        (sender as AnyObject).removeFromSuperview()
+        if (self.spottedView != nil) {
+            self.spottedView.removeFromSuperview()
+        }
+        
+        if (self.newSpottedView != nil) {
+            self.newSpottedView.removeFromSuperview()
+        }
+        
+        self.topHeaderContainer.addSubview(self.createLabelButton(text: "+", cgrect: CGRect(x: screenSize.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
+    }
+    
+    @IBAction func newSpotted(_ sender: Any) {
+        (sender as AnyObject).removeFromSuperview()
+        self.topHeaderContainer.addSubview(self.createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:))))
+        
+        self.newSpottedView = NewSpottedView(frame: CGRect.zero)
+        self.mapView.addSubview(self.newSpottedView)
+        
+        self.topHeaderContainer.addSubview(self.createLabelButton(text: "Send", cgrect: CGRect(x: screenSize.width-60, y: 5, width: 50, height: 30), color: UIColor.black, selector: #selector(LandingViewController.sendSpotted(_:))))
     }
     
     // Function that creates a Button
@@ -119,6 +150,8 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         let button = UIButton(type: UIButtonType.infoLight) as UIButton
         button.frame = cgrect
         button.backgroundColor = backgroundColor
+        button.layer.cornerRadius = 15
+        button.layer.borderWidth = 1
         button.setImage(UIImage(named: imgName) as UIImage?, for: .normal)
         button.addTarget(self, action: selector, for:.touchUpInside)
         

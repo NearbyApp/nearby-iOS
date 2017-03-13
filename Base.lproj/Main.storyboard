@@ -124,24 +124,6 @@
             </objects>
             <point key="canvasLocation" x="536.79999999999995" y="133.5832083958021"/>
         </scene>
-        <!--Spotted View Controller-->
-        <scene sceneID="YNY-O7-aOY">
-            <objects>
-                <viewController storyboardIdentifier="SpottedViewController" id="aK6-sS-Odi" customClass="SpottedViewController" customModule="nearbyapp" customModuleProvider="target" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="auy-gj-Kkp"/>
-                        <viewControllerLayoutGuide type="bottom" id="MRw-In-aDL"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="TbW-FF-jEB">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                    </view>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="cQe-5P-5au" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1210" y="134"/>
-        </scene>
     </scenes>
     <resources>
         <image name="logo" width="250" height="289"/>
