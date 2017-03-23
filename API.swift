@@ -12,12 +12,12 @@ import SwiftyJSON
 
 class API
 {
-    private var facebookId:String = ""
-    private var accessToken:String = ""
+    private var facebookId: String!
+    private var accessToken: String!
     
-    public func facebookAuthenticate(token accessToken:String, id facebookId:String) -> Bool {
+    public func facebookAuthenticate(token accessToken: String, id facebookId: String) -> Bool
+    {
         var success = true
-        
         self.accessToken = accessToken
         self.facebookId = facebookId
         
@@ -29,15 +29,19 @@ class API
         
         // Calling API
         session.dataTask(with: request) {(data, response, error) in
+            
             if error != nil {
                 print(error!)
                 success = false
             }
+            
         }.resume()
+        
         return success
     }
     
-    public func fetchMarkersInArea(token accessToken:String, id facebookId:String, minLat: Float, maxLat: Float, minLong: Float, maxLong: Float) -> Array<Marker> {
+    public func fetchMarkersInArea(token accessToken: String, id facebookId: String, minLat: Float, maxLat: Float, minLong: Float, maxLong: Float) -> Array<Marker>
+    {
         var arrayMarkers = Array<Marker>()
         
         self.accessToken = accessToken
@@ -46,50 +50,55 @@ class API
         // Building request
         let request = self.buildRequest(url: "/v1/spotteds", requestParams: "?minLat=" + String(minLat) + "&maxLat=" + String(maxLat) + "&minLong=" + String(minLong) + "&maxLong=" + String(maxLong) + "&locationOnly=" + "true", method: "GET")
         let session = URLSession.shared
+        let semaphore = DispatchSemaphore(value: 0)
         
         var myData = Data()
-        let semaphore = DispatchSemaphore(value: 0);
         
         // Calling API
         let task = session.dataTask(with: request) {(data, response, error) in
             myData = data!
             semaphore.signal()
         }
+        
         task.resume()
         semaphore.wait(timeout: DispatchTime.distantFuture)
         
         for (_, subJson):(String, JSON) in JSON(data: myData) {
+            
             if (subJson["_id"].stringValue != "") {
                 arrayMarkers.append(Marker(id: subJson["_id"].stringValue, latitude: Double(subJson["location"]["coordinates"][1].stringValue)!, longitude: Double(subJson["location"]["coordinates"][0].stringValue)!, type: subJson["location"]["type"].stringValue, creationDate: subJson["creationDate"].stringValue))
             }
+            
         }
+        
         return arrayMarkers
     }
     
-    public func fetchSpottedById(token accessToken:String, id facebookId:String, spottedId: String) -> Spotted {
+    public func fetchSpottedById(token accessToken: String, id facebookId: String, spottedId: String) -> Spotted
+    {
         self.accessToken = accessToken
         self.facebookId = facebookId
         
         // Building request
         let request = self.buildRequest(url: "/v1/spotted/", requestParams: spottedId, method: "GET")
         let session = URLSession.shared
+        let semaphore = DispatchSemaphore(value: 0)
         
         var myData = Data()
-        let semaphore = DispatchSemaphore(value: 0);
         
         // Calling API
         let task = session.dataTask(with: request) {(data, response, error) in
             myData = data!
             semaphore.signal()
         }
+        
         task.resume()
         semaphore.wait(timeout: DispatchTime.distantFuture)
         
         var json = JSON(data: myData)
-        
-        var fullName:String = ""
-        var pictureURL:String = ""
-        var profilePictureURL:String = ""
+        var fullName: String = ""
+        var pictureURL: String = ""
+        var profilePictureURL: String = ""
         
         if (json["fullName"] == nil) {
             fullName = "Anonymous"
@@ -108,7 +117,8 @@ class API
         return Spotted(id: String(describing: json["_id"]), fullName: fullName, pictureURL: pictureURL, profilePictureURL: profilePictureURL, creationDate: String(describing: json["creationDate"]), message: String(describing: json["message"]))
     }
     
-    public func fetchImageFromURL(url: String) -> UIImage {
+    public func fetchImageFromURL(url: String) -> UIImage
+    {
         let request = URLRequest(url: URL(string: url)!)
         let session = URLSession.shared
         let semaphore = DispatchSemaphore(value: 0);
@@ -116,6 +126,7 @@ class API
         var image:UIImage? = nil
         
         let downloadPicTask = session.dataTask(with: request) { (data, response, error) in
+            
             if (response as? HTTPURLResponse) != nil {
                 if let imageData = data {
                     image = UIImage(data: imageData)
@@ -124,34 +135,43 @@ class API
             
             semaphore.signal()
         }
+        
         downloadPicTask.resume()
         semaphore.wait(timeout: DispatchTime.distantFuture)
         
         return image!
     }
     
-    public func publishSpotted(token accessToken:String, id facebookId:String, anonymity: Bool, longitude: Float, latitude: Float, message: String) -> Bool {
+    public func publishSpotted(token accessToken: String, id facebookId: String, anonymity: Bool, longitude: Float, latitude: Float, message: String) -> Bool
+    {
         self.accessToken = accessToken
         self.facebookId = facebookId
         
         var request = self.buildRequest(url: "/v1/spotted", requestParams: "", method: "POST")
-        print(String(anonymity) + " " + String(longitude) + " " + String(latitude) + " " + String(message))
         let getMethodData = "anonymity=" + String(anonymity) + "&longitude=" + String(longitude) + "&latitude=" + String(latitude) + "&message=" + message
         request.httpBody = getMethodData.data(using: .utf8)
         let session = URLSession.shared
         
         let newSpottedTask = session.dataTask(with: request) { (data, response, error) in
-            print(response)
-            if (response as? HTTPURLResponse) != nil {
-
-            }
-
         }
+        
         newSpottedTask.resume()
+        
         return true
     }
     
-    private func buildRequest(url: String, requestParams: String, method: String) -> URLRequest {
+    /*public func getMySpotted() -> Array<Spotted> {
+        
+        let request = self.buildRequest(url: "/v1/spotted/me", requestParams: "", method: "GET")
+        let session = URLSession.shared
+        
+        let task = session.dataTask(with: request) { (data, response, error) in
+        }
+        task.resume()
+    }*/
+    
+    private func buildRequest(url: String, requestParams: String, method: String) -> URLRequest
+    {
         let loginString = String(format: "%@:%@", self.facebookId, self.accessToken)
         let loginData = loginString.data(using: String.Encoding.utf8)!
         let base64LoginString = loginData.base64EncodedString()

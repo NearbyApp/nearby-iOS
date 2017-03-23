@@ -8,145 +8,77 @@
 
 import UIKit
 import GoogleMaps
+import FacebookLogin
 import FacebookCore
 
-class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationManagerDelegate, GMUClusterManagerDelegate
-{
-    @IBOutlet var topHeaderContainer: UIView!
-    @IBOutlet var MapContainer: UIView!
-    
-    private var mapView: GMSMapView! = nil;
-    private var clusterManager: GMUClusterManager!
-    private var locationManager = CLLocationManager()
-    private var zoom:Float = 12.0
-    private var spottedView: SpottedView!
-    private var newSpottedView: NewSpottedView!
-    
-    let screenSize = UIScreen.main.bounds
+class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationManagerDelegate
+{    
+    private var map_view: GMSMapView! = nil
+    private var location_manager = CLLocationManager()
+    private var zoom: Float = 12.0
+    private var spotted_view: SpottedView!
+    private var create_spotted_view = CreateSpottedView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+    private var side_menu_view = SideMenuView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width/2, height: UIScreen.main.bounds.height))
+    private var top_header_container_view: UIView!
 
-    override func viewDidLoad() {
+    override func viewDidLoad()
+    {
         super.viewDidLoad()
         
+        self.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        self.view.backgroundColor = .white
+        
+        top_header_container_view = TopHeaderMenuView(frame: CGRect(x: 0, y: 20, width: UIScreen.main.bounds.width, height: 40))
+        self.view.addSubview(top_header_container_view)
+        
         if CLLocationManager.locationServicesEnabled() {
-            self.locationManager.requestAlwaysAuthorization()
-            self.locationManager.requestWhenInUseAuthorization()
-            self.locationManager.delegate = self
-            self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            self.locationManager.startUpdatingLocation()
+            location_manager.requestAlwaysAuthorization()
+            location_manager.requestWhenInUseAuthorization()
+            location_manager.delegate = self
+            location_manager.desiredAccuracy = kCLLocationAccuracyBest
+            location_manager.startUpdatingLocation()
         }
         
-        self.topHeaderContainer.frame = CGRect(x: 0, y: 20, width: screenSize.width, height: 50)
-        self.topHeaderContainer.backgroundColor = UIColor(red: 229/255, green: 57/255, blue: 53/255, alpha: 1)
+        top_header_container_view.addSubview(createLabelButton(text: "+", cgrect: CGRect(x: UIScreen.main.bounds.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
+        top_header_container_view.addSubview(createLabelButton(text: "Menu", cgrect: CGRect(x: 5, y: 5, width: 60, height: 30), color: .white, selector: #selector(LandingViewController.menu(_:))))
         
-        self.topHeaderContainer.addSubview(self.createLabelButton(text: "+", cgrect: CGRect(x: screenSize.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
-        
-        self.displayGoogleMaps()
+        displayGoogleMaps()
     }
     
-    func displayGoogleMaps() {
-        self.mapView = GMSMapView.map(withFrame: CGRect(x: 0, y: 0, width: screenSize.width, height: screenSize.height), camera: GMSCameraPosition.camera(withLatitude: (self.locationManager.location?.coordinate.latitude)!, longitude: (self.locationManager.location?.coordinate.longitude)!, zoom: self.zoom))
-        self.mapView.delegate = self
-        self.mapView.settings.compassButton = true
-        self.mapView.settings.myLocationButton = true
-        self.mapView.isMyLocationEnabled = true
-        self.MapContainer.addSubview(mapView)
+    // -------------- Custom functions definition -------------- //
+    private func displayGoogleMaps()
+    {
+        map_view = GMSMapView.map(withFrame: CGRect(x: 0, y: 60, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), camera: GMSCameraPosition.camera(withLatitude: (location_manager.location?.coordinate.latitude)!, longitude: (location_manager.location?.coordinate.longitude)!, zoom: self.zoom))
+        map_view.delegate = self
+        map_view.isMyLocationEnabled = true
+        self.view.addSubview(map_view)
         
-        // Adding center on map button
-        self.mapView.addSubview(self.createButton(imgName: "ic_qu_direction_mylocation.png", cgrect: CGRect(x: screenSize.width-40, y: 10, width:30, height:30), backgroundColor: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.centerMapAction(_:))))
-        }
+        map_view.addSubview(createButton(imgName: "ic_qu_direction_mylocation.png", cgrect: CGRect(x: UIScreen.main.bounds.width-40, y: 10, width:30, height:30), backgroundColor: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.centerMapAction(_:))))
+    }
     
-    func fetchMarkersInArea(minLat: Float, maxLat: Float, minLong: Float, maxLong: Float) {
+    private func fetchMarkersInArea(minLat: Float, maxLat: Float, minLong: Float, maxLong: Float)
+    {
         let arrayMarkers = API().fetchMarkersInArea(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, minLat: minLat, maxLat: maxLat, minLong: minLong, maxLong: maxLong)
         
-        // Displaying Markers on the map
         for markerModel in arrayMarkers {
             let marker = GMSMarker()
             marker.position = CLLocationCoordinate2D(latitude: markerModel.latitude, longitude: markerModel.longitude)
-            marker.title = markerModel.id
-            marker.map = self.mapView
+            marker.userData = markerModel.id
+            marker.map = map_view
         }
     }
     
-    // Google map on move function
-    func mapView(_ mapView: GMSMapView, idleAt position: GMSCameraPosition) {
-        let minLat = min(mapView.projection.visibleRegion().farLeft.latitude, mapView.projection.visibleRegion().farRight.latitude, mapView.projection.visibleRegion().nearLeft.latitude, mapView.projection.visibleRegion().farRight.latitude)
-        let maxLat = max(mapView.projection.visibleRegion().farLeft.latitude, mapView.projection.visibleRegion().farRight.latitude, mapView.projection.visibleRegion().nearLeft.latitude, mapView.projection.visibleRegion().farRight.latitude)
-        let minLong = min(mapView.projection.visibleRegion().farLeft.longitude, mapView.projection.visibleRegion().farRight.longitude, mapView.projection.visibleRegion().nearLeft.longitude, mapView.projection.visibleRegion().farRight.longitude)
-        let maxLong = max(mapView.projection.visibleRegion().farLeft.longitude, mapView.projection.visibleRegion().farRight.longitude, mapView.projection.visibleRegion().nearLeft.longitude, mapView.projection.visibleRegion().farRight.longitude)
-        
-        self.fetchMarkersInArea(minLat: Float(minLat), maxLat: Float(maxLat), minLong: Float(minLong), maxLong: Float(maxLong))
-    }
-    
-    func mapView(_ mapView: GMSMapView, markerInfoWindow marker: GMSMarker) -> UIView? {
-        
-        // Creates the view to display spotted information
-        self.spottedView = SpottedView(frame: CGRect.zero)
-        self.spottedView.fetchSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, spottedId: marker.title!)
-        self.mapView.addSubview(self.spottedView)
-        
-        self.topHeaderContainer.subviews.forEach({ $0.removeFromSuperview() })
-        
-        // Creates the back button to return to the map when clicked
-        self.topHeaderContainer.addSubview(self.createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:))))
-        
-        return self.spottedView
-    }
-    
-    // Location Manager delegates
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("error:: \(error.localizedDescription)")
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        if status == .authorizedWhenInUse {
-            self.locationManager.requestLocation()
+    public func clearFacebookInfo() {
+        LoginManager().logOut()
+        if let nav = self.navigationController {
+            nav.popToRootViewController(animated: true)
+        } else {
+            self.dismiss(animated: true, completion: nil)
         }
     }
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        self.locationManager.stopUpdatingLocation()
-    }
-    
-    // Actions
-    @IBAction func sendSpotted(_ sender: Any) {
-        self.newSpottedView.removeFromSuperview()
-        self.topHeaderContainer.subviews.forEach({ $0.removeFromSuperview() })
-        self.topHeaderContainer.addSubview(self.createLabelButton(text: "+", cgrect: CGRect(x: screenSize.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
-        
-        let message = self.newSpottedView.getSpottedMessage()
-        
-        let result = API().publishSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, anonymity: true, longitude: Float((self.locationManager.location?.coordinate.longitude)!), latitude: Float((self.locationManager.location?.coordinate.latitude)!), message: message)
-    }
-    
-    @IBAction func centerMapAction(_ sender: Any) {
-        self.mapView.animate(to: GMSCameraPosition.camera(withLatitude: (self.locationManager.location?.coordinate.latitude)!, longitude:(self.locationManager.location?.coordinate.longitude)!, zoom:self.zoom))
-    }
-    
-    @IBAction func backToMap(_ sender: Any) {
-        (sender as AnyObject).removeFromSuperview()
-        if (self.spottedView != nil) {
-            self.spottedView.removeFromSuperview()
-        }
-        
-        if (self.newSpottedView != nil) {
-            self.newSpottedView.removeFromSuperview()
-        }
-        
-        self.topHeaderContainer.addSubview(self.createLabelButton(text: "+", cgrect: CGRect(x: screenSize.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
-    }
-    
-    @IBAction func newSpotted(_ sender: Any) {
-        (sender as AnyObject).removeFromSuperview()
-        self.topHeaderContainer.addSubview(self.createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:))))
-        
-        self.newSpottedView = NewSpottedView(frame: CGRect.zero)
-        self.mapView.addSubview(self.newSpottedView)
-        
-        self.topHeaderContainer.addSubview(self.createLabelButton(text: "Send", cgrect: CGRect(x: screenSize.width-60, y: 5, width: 50, height: 30), color: UIColor.black, selector: #selector(LandingViewController.sendSpotted(_:))))
-    }
-    
-    // Function that creates a Button
-    private func createButton(imgName: String, cgrect: CGRect, backgroundColor: UIColor, selector:Selector) -> UIButton {
+    private func createButton(imgName: String, cgrect: CGRect, backgroundColor: UIColor, selector:Selector) -> UIButton
+    {
         let button = UIButton(type: UIButtonType.infoLight) as UIButton
         button.frame = cgrect
         button.backgroundColor = backgroundColor
@@ -154,18 +86,138 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         button.layer.borderWidth = 1
         button.setImage(UIImage(named: imgName) as UIImage?, for: .normal)
         button.addTarget(self, action: selector, for:.touchUpInside)
-        
         return button
     }
     
-    // Function that creates a LabelButton
-    private func createLabelButton(text: String, cgrect: CGRect, color: UIColor, selector:Selector) -> UIButton {
+    private func createLabelButton(text: String, cgrect: CGRect, color: UIColor, selector:Selector) -> UIButton
+    {
         let label = UIButton(type: UIButtonType.custom) as UIButton
         label.frame = cgrect
         label.tintColor = color
         label.setTitle(text, for: .normal)
         label.addTarget(self, action: selector, for:.touchUpInside)
-        
         return label
+    }
+    
+    private func alert(message: String, title: String = "")
+    {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let OKAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(OKAction)
+        self.present(alertController, animated: true, completion: nil)
+    }
+
+    // -------------- function redifinition -------------- //
+    func mapView(_ mapView: GMSMapView, idleAt position: GMSCameraPosition)
+    {
+        let min_lat = min(map_view.projection.visibleRegion().farLeft.latitude, map_view.projection.visibleRegion().farRight.latitude, map_view.projection.visibleRegion().nearLeft.latitude, map_view.projection.visibleRegion().farRight.latitude)
+        let max_lat = max(map_view.projection.visibleRegion().farLeft.latitude, map_view.projection.visibleRegion().farRight.latitude, map_view.projection.visibleRegion().nearLeft.latitude, map_view.projection.visibleRegion().farRight.latitude)
+        let min_long = min(map_view.projection.visibleRegion().farLeft.longitude, map_view.projection.visibleRegion().farRight.longitude, map_view.projection.visibleRegion().nearLeft.longitude, map_view.projection.visibleRegion().farRight.longitude)
+        let max_long = max(map_view.projection.visibleRegion().farLeft.longitude, map_view.projection.visibleRegion().farRight.longitude, map_view.projection.visibleRegion().nearLeft.longitude, map_view.projection.visibleRegion().farRight.longitude)
+        
+        self.fetchMarkersInArea(minLat: Float(min_lat), maxLat: Float(max_lat), minLong: Float(min_long), maxLong: Float(max_long))
+    }
+    
+    func mapView(_ mapView: GMSMapView, markerInfoWindow marker: GMSMarker) -> UIView?
+    {
+        spotted_view = SpottedView(frame: CGRect(x: 0, y: 59, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+        spotted_view.fetchSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, spottedId: marker.userData! as! String)
+        self.view.addSubview(spotted_view)
+        
+        top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })
+    
+        top_header_container_view.addSubview(createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:))))
+        
+        return nil // we don't return any view since we're displaying our own on top of the mapView
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error)
+    {
+        print("error:: \(error.localizedDescription)")
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus)
+    {
+        if status == .authorizedWhenInUse {
+            location_manager.requestLocation()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
+    {
+        location_manager.stopUpdatingLocation()
+    }
+    
+    // -------------- Actions -------------- //
+    @IBAction func sendAnonymousSpotted(_ sender: Any)
+    {
+        create_spotted_view.removeFromSuperview()
+        top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })
+        top_header_container_view.addSubview(createLabelButton(text: "+", cgrect: CGRect(x: UIScreen.main.bounds.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
+        
+        let message = create_spotted_view.getSpottedMessage()
+        let result = API().publishSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, anonymity: true, longitude: Float((location_manager.location?.coordinate.longitude)!), latitude: Float((location_manager.location?.coordinate.latitude)!), message: message)
+        
+        if (result == true) {
+            alert(message: "Your message was successfully sent!", title: "Success")
+        } else {
+            alert(message: "Your message was not sent! Something went wrong!", title: "Error")
+        }
+    }
+    
+    @IBAction func centerMapAction(_ sender: Any)
+    {
+        map_view.animate(to: GMSCameraPosition.camera(withLatitude: (location_manager.location?.coordinate.latitude)!, longitude:(location_manager.location?.coordinate.longitude)!, zoom:self.zoom))
+    }
+    
+    @IBAction func backToMap(_ sender: Any) {
+        top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })
+        
+        if (side_menu_view != nil) {
+            side_menu_view.removeFromSuperview()
+        }
+        
+        if (spotted_view != nil) {
+            spotted_view.removeFromSuperview()
+        }
+        
+        if (create_spotted_view != nil) {
+            create_spotted_view.removeFromSuperview()
+        }
+        
+        top_header_container_view.addSubview(createLabelButton(text: "Menu", cgrect: CGRect(x: 5, y: 5, width: 60, height: 30), color: .white, selector: #selector(LandingViewController.menu(_:))))
+        top_header_container_view.addSubview(createLabelButton(text: "+", cgrect: CGRect(x: UIScreen.main.bounds.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
+    }
+    
+    @IBAction func sendSpotted(_ sender: Any)
+    {
+        create_spotted_view.removeFromSuperview()
+        top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })
+        top_header_container_view.addSubview(createLabelButton(text: "+", cgrect: CGRect(x: UIScreen.main.bounds.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))
+        
+        let message = create_spotted_view.getSpottedMessage()
+        let result = API().publishSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, anonymity: false, longitude: Float((location_manager.location?.coordinate.longitude)!), latitude: Float((location_manager.location?.coordinate.latitude)!), message: message)
+        
+        if (result == true) {
+            alert(message: "Your message was successfully sent!", title: "Success")
+        } else {
+            alert(message: "Your message was not sent! Something went wrong!", title: "Error")
+        }
+    }
+    
+    @IBAction func newSpotted(_ sender: Any)
+    {
+        top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })
+        top_header_container_view.addSubview(createLabelButton(text: "Back", cgrect: CGRect(x: -20, y: 0, width: 100, height: 40), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:))))
+        map_view.addSubview(create_spotted_view)
+        top_header_container_view.addSubview(createLabelButton(text: "Send", cgrect: CGRect(x: UIScreen.main.bounds.width-60, y: 5, width: 50, height: 30), color: UIColor.black, selector: #selector(LandingViewController.sendSpotted(_:))))
+        top_header_container_view.addSubview(createLabelButton(text: "Send Anonymous", cgrect: CGRect(x: (UIScreen.main.bounds.width/2)-80, y: 5, width: 160, height: 30), color: UIColor.black, selector: #selector(LandingViewController.sendAnonymousSpotted(_:))))
+    }
+    
+    @IBAction func menu(_ sender: Any)
+    {
+        top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })
+        top_header_container_view.addSubview(createLabelButton(text: "Back to map", cgrect: CGRect(x: 5, y: 5, width: 130, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.backToMap(_:))))
+        map_view.addSubview(side_menu_view)
     }
 }

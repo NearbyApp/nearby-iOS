@@ -17,7 +17,8 @@ struct Spotted
     let profilePictureURL: String
     let message: String
     
-    init(id: String, fullName: String, pictureURL: String, profilePictureURL: String, creationDate: String, message: String) {
+    init(id: String, fullName: String, pictureURL: String, profilePictureURL: String, creationDate: String, message: String)
+    {
         self.id = id
         self.fullName = fullName
         self.pictureURL = pictureURL
