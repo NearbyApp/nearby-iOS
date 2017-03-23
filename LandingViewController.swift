@@ -68,14 +68,11 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
         }
     }
     
-    public func clearFacebookInfo() {
+    /*public func clearFacebookInfo()
+    {
         LoginManager().logOut()
-        if let nav = self.navigationController {
-            nav.popToRootViewController(animated: true)
-        } else {
-            self.dismiss(animated: true, completion: nil)
-        }
-    }
+        self.navigationController?.popToViewController(UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "ViewController"), animated: true)
+    }*/
     
     private func createButton(imgName: String, cgrect: CGRect, backgroundColor: UIColor, selector:Selector) -> UIButton
     {
@@ -173,17 +170,15 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
     @IBAction func backToMap(_ sender: Any) {
         top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })
         
-        if (side_menu_view != nil) {
-            side_menu_view.removeFromSuperview()
-        }
+        side_menu_view.removeFromSuperview()
         
         if (spotted_view != nil) {
             spotted_view.removeFromSuperview()
         }
         
-        if (create_spotted_view != nil) {
-            create_spotted_view.removeFromSuperview()
-        }
+        side_menu_view.getAllMySpottedView().removeFromSuperview()
+        
+        create_spotted_view.removeFromSuperview()
         
         top_header_container_view.addSubview(createLabelButton(text: "Menu", cgrect: CGRect(x: 5, y: 5, width: 60, height: 30), color: .white, selector: #selector(LandingViewController.menu(_:))))
         top_header_container_view.addSubview(createLabelButton(text: "+", cgrect: CGRect(x: UIScreen.main.bounds.width-25, y: 5, width: 20, height: 30), color: UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1), selector: #selector(LandingViewController.newSpotted(_:))))

@@ -10,27 +10,25 @@ import UIKit
 
 class CreateSpottedView: UIView, UITextFieldDelegate
 {
-    private let screenSize = UIScreen.main.bounds
-    private var textField:UITextField? = nil
+    private var text_field: UITextField? = nil
     
     override init(frame: CGRect)
     {
         super.init(frame: frame)
-        
         self.backgroundColor = UIColor.white
         
-        textField = UITextField(frame: CGRect(x: 10, y: 10, width: screenSize.width-10, height: 30))
-        textField?.placeholder = "What did you spot?"
-        textField?.autocorrectionType = UITextAutocorrectionType.no
-        textField?.keyboardType = UIKeyboardType.default
-        textField?.returnKeyType = UIReturnKeyType.done
-        textField?.clearButtonMode = UITextFieldViewMode.whileEditing;
-        textField?.contentVerticalAlignment = UIControlContentVerticalAlignment.center
-        textField?.delegate = self
-        textField?.becomeFirstResponder()
-        textField?.clearsOnBeginEditing = true
+        text_field = UITextField(frame: CGRect(x: 10, y: 10, width: UIScreen.main.bounds.width-10, height: 30))
+        text_field?.placeholder = "What did you spot?"
+        text_field?.autocorrectionType = UITextAutocorrectionType.no
+        text_field?.keyboardType = UIKeyboardType.default
+        text_field?.returnKeyType = UIReturnKeyType.done
+        text_field?.clearButtonMode = UITextFieldViewMode.whileEditing;
+        text_field?.contentVerticalAlignment = UIControlContentVerticalAlignment.center
+        text_field?.delegate = self
+        text_field?.becomeFirstResponder()
+        text_field?.clearsOnBeginEditing = true
         
-        self.addSubview(textField!)
+        self.addSubview(text_field!)
     }
     
     required init?(coder aDecoder: NSCoder)
@@ -40,6 +38,6 @@ class CreateSpottedView: UIView, UITextFieldDelegate
     
     public func getSpottedMessage() -> String
     {
-        return textField!.text!
+        return text_field!.text!
     }
 }

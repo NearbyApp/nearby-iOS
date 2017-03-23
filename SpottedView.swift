@@ -11,8 +11,6 @@ import UIKit
 
 class SpottedView: UIView
 {
-    private let screenSize = UIScreen.main.bounds
-    
     override init(frame: CGRect)
     {
         super.init(frame: frame)
@@ -31,14 +29,14 @@ class SpottedView: UIView
         }
         
         // Message
-        self.addSubview(createLabel(cgrect: CGRect(x: 10, y: 50, width: screenSize.width-10, height: 40), text: spotted.message))
+        self.addSubview(createLabel(cgrect: CGRect(x: 10, y: 50, width: UIScreen.main.bounds.width-10, height: 40), text: spotted.message))
         
         // FullName
-        self.addSubview(createLabel(cgrect: CGRect(x: 60, y: 10, width: screenSize.width-10, height: 40), text: spotted.fullName))
+        self.addSubview(createLabel(cgrect: CGRect(x: 60, y: 10, width: UIScreen.main.bounds.width-10, height: 40), text: spotted.fullName))
         
         // Spotted image
         if (spotted.pictureURL != "") {
-            self.addSubview(createImageByURL(url: spotted.pictureURL, cgrect: CGRect(x: 0, y: 90, width: screenSize.width, height: 520)))
+            self.addSubview(createImageByURL(url: spotted.pictureURL, cgrect: CGRect(x: 0, y: 90, width: UIScreen.main.bounds.width, height: 520)))
         }
     }
 

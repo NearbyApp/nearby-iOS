@@ -50,7 +50,9 @@ class ViewController: UIViewController
     
     private func goToLandingPage()
     {
-        self.present(UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "LandingViewController"), animated: true, completion: nil)
+        let landing_view_controller = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "LandingViewController") as! LandingViewController
+        self.navigationController?.pushViewController(landing_view_controller, animated: true)
+        self.present(landing_view_controller, animated: true, completion: nil)
     }
     
     private func alert(message: String, title: String)
