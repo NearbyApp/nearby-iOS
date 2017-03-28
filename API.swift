@@ -74,10 +74,12 @@ class API
         return arrayMarkers
     }
     
-    public func fetchSpottedById(token accessToken: String, id facebookId: String, spottedId: String) -> Spotted
+    public func fetchSpottedById(spottedId: String) -> Spotted
     {
-        self.accessToken = accessToken
-        self.facebookId = facebookId
+        let defaults = UserDefaults.standard
+        let arr = defaults.string(forKey: defaultsKeys.access_token)?.components(separatedBy: ",")
+        self.accessToken = arr?[0]
+        self.facebookId = arr?[1]
         
         // Building request
         let request = self.buildRequest(url: "/v1/spotted/", requestParams: spottedId, method: "GET")
@@ -160,15 +162,39 @@ class API
         return true
     }
     
-    /*public func getMySpotted() -> Array<Spotted> {
+    public func getMySpotted() -> Array<SpottedBasic>
+    {
+        var array_spotted = Array<SpottedBasic>()
         
-        let request = self.buildRequest(url: "/v1/spotted/me", requestParams: "", method: "GET")
+        let defaults = UserDefaults.standard
+        let arr = defaults.string(forKey: defaultsKeys.access_token)?.components(separatedBy: ",")
+        self.accessToken = arr?[0]
+        self.facebookId = arr?[1]
+        
+        let request = self.buildRequest(url: "/v1/spotteds/me", requestParams: "", method: "GET")
         let session = URLSession.shared
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        var myData = Data()
         
         let task = session.dataTask(with: request) { (data, response, error) in
+            myData = data!
+            semaphore.signal()
         }
+        
         task.resume()
-    }*/
+        semaphore.wait(timeout: DispatchTime.distantFuture)
+        
+        for (_, subJson):(String, JSON) in JSON(data: myData) {
+            
+            if (subJson["_id"].stringValue != "") {
+                array_spotted.append(SpottedBasic(id: subJson["_id"].stringValue, message: subJson["message"].stringValue))
+            }
+            
+        }
+        
+        return array_spotted
+    }
     
     private func buildRequest(url: String, requestParams: String, method: String) -> URLRequest
     {

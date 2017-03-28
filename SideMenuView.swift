@@ -41,6 +41,7 @@ class SideMenuView: UIView
     {
         //self.removeFromSuperview()
         self.addSubview(all_my_spotteds_views)
+        all_my_spotteds_views.fetchMySpotteds()
     }
     
     /*@IBAction func logout(_ sender: Any)

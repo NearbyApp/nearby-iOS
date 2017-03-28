@@ -118,7 +118,7 @@ class LandingViewController: UIViewController, GMSMapViewDelegate, CLLocationMan
     func mapView(_ mapView: GMSMapView, markerInfoWindow marker: GMSMarker) -> UIView?
     {
         spotted_view = SpottedView(frame: CGRect(x: 0, y: 59, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
-        spotted_view.fetchSpotted(token: (AccessToken.current?.authenticationToken)!, id: (AccessToken.current?.userId)!, spottedId: marker.userData! as! String)
+        spotted_view.fetchSpotted(spottedId: marker.userData! as! String)
         self.view.addSubview(spotted_view)
         
         top_header_container_view.subviews.forEach({ $0.removeFromSuperview() })

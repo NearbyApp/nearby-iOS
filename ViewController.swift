@@ -41,6 +41,10 @@ class ViewController: UIViewController
     // -------------- Custom functions definition -------------- //
     private func authenticateUserByFacebook(accessToken: AccessToken)
     {
+        let defaults = UserDefaults.standard
+        defaults.setValue(accessToken.authenticationToken + "," + accessToken.userId!, forKey: defaultsKeys.access_token)
+        //defaults.synchronize()
+        
         if (API().facebookAuthenticate(token: accessToken.authenticationToken, id: accessToken.userId!)) {
             goToLandingPage()
         } else {

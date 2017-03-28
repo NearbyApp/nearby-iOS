@@ -17,9 +17,9 @@ class SpottedView: UIView
         self.backgroundColor = UIColor.white
     }
     
-    public func fetchSpotted(token accessToken: String, id facebookId: String, spottedId: String)
+    public func fetchSpotted(spottedId: String)
     {
-        let spotted:Spotted! = API().fetchSpottedById(token: accessToken, id: facebookId, spottedId: spottedId)
+        let spotted: Spotted! = API().fetchSpottedById(spottedId: spottedId)
         
         // Spotted user image
         if (spotted.profilePictureURL != "") {
